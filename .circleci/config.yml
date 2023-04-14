@@ -1,7 +1,7 @@
 version: 2.1
 orbs:
   commitlint: conventional-changelog/commitlint@1.0.0
-  node: circleci/node@5
+  node: circleci/node@5.1.0
 aliases:
   - &release-branches
     - develop
@@ -30,6 +30,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - deploy_gh_pages
+      - run: npx --no -- semantic-release --dry-run
   build_and_release:
     executor:
       name: node/default
@@ -40,7 +41,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - deploy_gh_pages
-      - run: npx semantic-release
+      - run: npx --no -- semantic-release
   update_i18n:
     executor:
       name: node/default
@@ -55,6 +56,9 @@ workflows:
     jobs:
       - commitlint/lint:
           target-branch: develop
+          filters:
+            branches:
+              ignore: *release-branches
   build_no_release:
     jobs:
       - build_no_release:
@@ -64,6 +68,8 @@ workflows:
   build_and_release:
     jobs:
       - build_and_release:
+          context:
+            - scratch-npm-creds
           filters:
             branches:
               only: *release-branches
